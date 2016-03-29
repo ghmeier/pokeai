@@ -1,0 +1,205 @@
+<!DOCTYPE>
+<html>
+<head>
+
+    <title>Giphifai</title>
+
+    <!-- Compiled and minified CSS -->
+    <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.1/css/materialize.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <style>
+    #search-button:hover{
+        cursor:pointer;
+    }
+    .chip:hover{
+        cursor:pointer;
+    }
+    .chip{
+        margin:3px;
+    }
+    @media (min-width: 991px) {
+      main {
+        padding-left: 240px;
+      }
+    }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="top-nav">
+            <div class="nav-wrapper">
+                <div id="nav-mobile">
+                    <ul id="slide-out" class="side-nav fixed">
+                        <li class="logo"><a>Giphifai</a></li>
+                        <li class="search">
+                            <div class="search-wrapper card">
+                                <input style="width:140px;color:black;margin-left:10px;" onkeydown="keySearch(this)" id="search" type="search">
+
+                                <i id="search-button" class="material-icons right" onclick="search()" style="color:black">search</i>
+                            </div>
+                        </li>
+                        <li class="bold no-padding">
+                            <ul class="collapsible collapsible-accordion">
+                                <li>
+                                    <a class="collapsible-header">
+                                        <i class="mdi-navigation-arrow-drop-down"></i>
+                                        <div class="valign-wrapper"><h5 class="valign">Tags</h5></div>
+                                    </a>
+                                    <div class="collapsible-body">
+                                        <ul id="tags">
+
+                                        </ul>
+                                        <div id="loadmoreajaxloader" style="display:none;"><center><img src="ajax-loader.gif" /></center></div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <a href="#" data-activates="slide-out" class="button-collapse"><i class="mdi-navigation-menu"></i></a>
+                </div>
+            </div>
+        </nav>
+        <a href="https://github.com/ghmeier/giphifai"><img style="position: absolute; top: 0; right: 0; border: 0; z-index:10000;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+    </header>
+    <main>
+        <div id="conainer section">
+            <div id="gif-list">
+
+            </div>
+            <div id="loadmoregif" class="row" style="display:none;">
+               <!--  <div class="preloader-wrapper big active">
+                    <div class="spinner-layer spinner-blue-only">
+                        <div class="circle-clipper left">
+                            <div class="circle"></div>
+                        </div>
+                    </div>
+                  </div>
+              </div> -->
+        </div>
+    </main>
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.1/js/materialize.min.js"></script>
+    <script>
+    var limit = 15;
+    var offset = 0;
+    var g_limit = 15;
+    var g_offset= 0;
+    var g_tag = "";
+
+    $(document).ready(function(){
+        $(".button-collapse").sideNav();
+
+        $.post("tags?limit="+limit+"&offset="+offset,{},function(data,status){
+            for (i=0;i<data.tags.length;i++){
+                $("#tags").append("<li><a onclick=\"getGifs('"+data.tags[i]+"')\">"+data.tags[i]+"</a></li>");
+            }
+        });
+    });
+
+    $("#slide-out").scroll(function(){
+        if($(window).scrollTop() == $(document).height() - $(window).height()){
+            offset += limit;
+            $('div#loadmoreajaxloader').show();
+            $.post("tags?limit="+limit+"&offset="+offset,{},function(data,status){
+                for (i=0;i<data.tags.length;i++){
+                    $("#tags").append("<li><a onclick=\"getGifs('"+data.tags[i]+"')\">"+data.tags[i]+"</a></li>");
+                }
+                $('div#loadmoregif').show();
+            });
+        }
+    });
+
+    $(window).scroll(function(){
+        if($(window).scrollTop() == $(document).height() - $(window).height()){
+            $('div#loadmoregif').show();
+            g_offset += g_limit;
+            addGifs();
+            $('.button-collapse').sideNav('hide');
+        }
+    });
+
+    function keySearch(ele) {
+        if(event.keyCode == 13) {
+            search();
+        }
+    }
+
+    function search(){
+        var query = $("#search").val();
+        $("#gif-list").empty();
+
+        if (query && query != ""){
+            $.post("search?q="+query,{},function(data,status){
+                var string = "<div class='row'><col s12 m11> <div class='card'><div class='card-content'><span class='card-title' style='color:black'>Related Tags</span><p>";
+                string += renderTags(data.tags);
+                string += "</p></div></div></div></div>";
+                $("#gif-list").html( $("#gif-list").html() + string);
+                renderGifs(data.list);
+                $('.button-collapse').sideNav('hide');
+            });
+        }
+    }
+
+    function getGifs(tag){
+        $("#gif-list").empty();
+        g_offset = 0;
+        g_tag = tag;
+        addGifs();
+    }
+
+    function addGifs(){
+        $.post("tags/"+g_tag+"?limit="+g_limit+"&offset="+g_offset,{},function(data,status){
+            var gifs = data.list;
+
+            renderGifs(gifs);
+            $('.button-collapse').sideNav('hide');
+        });
+    }
+
+    function renderGifs(gifs){
+        var string = "";
+            for (i=0;i<gifs.length;i++){
+
+                if (i%3 == 0){
+                    if (i!=0){
+                        string+="</div>";
+                    }
+                    string+="<div class='row'>";
+                }
+
+                string += "<div class='col s12 m6 l4'><div class='card medium' style='height:350px'><div class='card-image'><img src='"+gifs[i].url.replace(/_s/g,"")+"'></div><div class='card-content'><span class='card-title activator grey-text text-darken-4'>View Tags<i class='material-icons right'>more_vert</i></span></div><div class='card-reveal'><span class='card-title activator grey-text text-darken-4'>Hide Tags<i class='material-icons right'>close</i></span>";
+
+                string += renderTags(gifs[i].id,gifs[i].tags);
+
+                string += "</div></div></div>";
+
+                if (i == gifs.length -1){
+                    string+="</div>";
+                }
+
+
+            }
+            $('div#loadmoregif').show();
+            $("#gif-list").html( $("#gif-list").html()+string);
+    }
+
+    function removeTag(id,tag){
+        console.log(id,tag);
+        $.post("tags/"+tag+"/ignore?id="+id,{},function(data,status){
+            console.log(data);
+        });
+
+    }
+
+    function renderTags(id,tags){
+        var string = "";
+        for (j=0;j<tags.length;j++){
+             string+="<div class='chip' style='' ><span onclick=\"getGifs('"+tags[j]+"')\">"+tags[j]+"</span><i onclick=\"removeTag('"+id+"','"+tags[j]+"')\" class='material-icons'>close</i></div>";
+        }
+        return string
+    }
+    </script>
+</body>
+</html>
