@@ -9,6 +9,8 @@ var session = require("express-session");
 var passport = require("passport");
 var favicon = require("serve-favicon");
 var cors = require("cors");
+var fs = require("fs");
+var bayes = require("bayes");
 var corsOptions = {
 	origin : "*"
 };
@@ -36,7 +38,21 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(cors(corsOptions));
 
+var data = fs.readFileSync("classifier.json","utf8");
+var classifier = {};
+
+if (data){
+    classifier = bayes.fromJson(data);
+}else{
+    classifier = bayes();
+}
+
 var routes = require("./routes.js");
-routes(app,passport);
+routes(app,classifier,passport);
+
+process.on('exit', function() {
+    console.log("Exiting");
+
+});
 
 module.exports = app;

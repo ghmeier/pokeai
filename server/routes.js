@@ -1,8 +1,9 @@
 var secrets = require("./config/secrets");
-var Gif = require("./models/Gif");
-var GifList = require("./models/GifList");
+var PokeImage = require("./models/Gif");
+var ImageList = require("./models/GifList");
+var request = require("request");
 
-module.exports = function(app,passport){
+module.exports = function(app,classifier,passport){
 
 	app.get("/ping",function(req,res){
 		res.send("pong");
@@ -28,7 +29,11 @@ module.exports = function(app,passport){
 				});
 			});
 			x++;
-		}
+		}			MongoClient.connect(monogo_url,function(err,db){
+				updateImage(self.url,{tags:self.tags},db,function(){
+					callback(self)
+				});
+			});
         //res.json({success:false,message:"Tagged "+success+" gifs."});
 
 	});
@@ -93,17 +98,34 @@ module.exports = function(app,passport){
 		});
 	});
 
-	app.post("/search",function(req,res){
-		var query = req.query.q;
-		var start = parseInt(req.query.offset) || 0;
-		var limit = parseInt(req.query.limit) || 25;
+	app.get("/categorize",function(req,res){
+		var url = req.query.url;
 
-		GifList.searchByTag(query,start,limit,function(data){
-			res.json({tags:data.tags,list:data.list});
-		})
+		var image = new PokeImage(null,url,null,null,null);
+
+		image.tag(function(img){
+			var keyword = img.categorize(classifier);
+
+			res.json({pokemon:keyword});
+		});
+	});
+
+	app.get("/search",function(req,res){
+		var query = req.query.q;
+		var limit = parseInt(req.query.limit) || 10;
+
+		ImageList.getImageList(query,new Array(),limit,classifier,function(list){
+			res.json({data:list});
+		});
 	})
+
+	app.get("/images",function(req,res){
+		res.json({});
+	});
 
 	app.get("*",function(req,res){
 		res.render("index.html");
 	});
+
+
 };

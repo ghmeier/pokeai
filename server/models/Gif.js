@@ -1,78 +1,116 @@
-var Firebase = require("firebase");
+var MongoClient = require("mongodb").MongoClient;
+var ObjectId = require("mongodb").ObjectID;
 var request = require("request");
-var fb_root = new Firebase("https://pokeai.firebaseio.com");
+var bayes = require("bayes");
+var fs = require("fs");
 
-function Gif() {
+var mongo_url = "mongodb://heroku_qs4vjvqc:gsnlshm4n071a1jplocgesdd3q@ds011810.mlab.com:11810/heroku_qs4vjvqc";
+
+function PokeImage() {
 	this.url = "";
+	this.keyword = "";
 	this.tags = new Array();
 	this.id = "";
 };
 
-Gif.getGifById = function(id,callback){
-	var gif_ref = fb_root.child("gifs").child(id);
-
-	gif_ref.once("value",function(snap){
-		var data = snap.val();
-		return new Gif(data.url,data.id,data.tags,function(gif){
-			callback(gif);
-		});
-	});
-}
-
-function Gif(url,id,tags,callback){
+function PokeImage(id,url,keyword,tags,callback){
 	this.url = url || "";
-	this.id= id || fb_root.child("gifs").push().key();
-	this.tags=tags || "";
+	this.keyword = keyword;
+	this.id= id || "";
+	this.tags=tags || new Array();
 	if (callback && typeof(callback) == 'function'){
 		callback(this);
 	}
 }
 
-Gif.prototype.create = function(callback){
-	request.get("http://api.giphy.com/v1/gifs/random?api_key=124hpbJkl6DGOQ",function(err,res,body){
-		var data = (JSON.parse(body)).data;
-		this.url = data.fixed_height_downsampled_url;
-		this.url = this.url.replace("_d.gif","_s.gif");
-		this.id = data.id;
-		callback(new Gif(this.url,this.id,this.tags));
+PokeImage.getImageByUrl = function(url,callback){
+	MongoClient.connect(mongo_url,function(err,db){
+		if (err){
+			console.log(err);
+			callback(false);
+		}
+
+		findImage(url,db,function(image){
+			callback(image);
+		});
+	});
+}
+
+PokeImage.insertImage = function(image,callback){
+	MongoClient.connect(mongo_url,function(err,db){
+		if (err){
+			console.log(err);
+			callback(false);
+		}
+
+		insertImage(image.url,image.keyword,image.tags,db,function(success){
+			callback(success);
+		})
+
+	});
+}
+
+var insertImage = function(url,keyword,tags,db,callback){
+	db.collection("images").insertOne({
+		"url":url,
+		"keyword":keyword,
+		"tags":tags
+	}, function (err,result){
+		if (err){
+			console.log(err);
+			callback(false);
+		}
+
+		callback(true);
+		db.close();
 	});
 };
 
-Gif.prototype.get = function(id, callback){
-	var gifs = fb_root.child("gifs");
-	gifs.once("value",function(s){
-		var data = s.value();
-
-		this.url = data.url;
-		this.tags = data.tags.split(",");
-		this.id = data.id;
-		callback(new Gif(this.url,this.id,this.tags));
+var findImage = function(url,db,callback){
+	var cursor = db.collection("images").findOne({url:url},{},function(err,doc){
+		db.close();
+		return new PokeImage(doc._id,doc.url,doc.keyword,doc.tags,function(image){
+			callback(image);
+		});
 	});
-};
 
-Gif.prototype.push = function(callback){
-	var gifs = fb_root.child("gifs");
-	var tags = fb_root.child("tags");
+}
 
-	gifs.child(this.id).set(this);
+var updateImage = function(url,data,db,callback){
+	var col = db.collection("images");
+
+	col.updateOne({url:url},{$set:data});
+	db.close();
+}
+
+PokeImage.prototype.classify = function(classifier,callback){
+	var self = this;
+
+	classifier.learn(self.tags.join(","),self.keyword);
+	fs.writeFileSync("classifier.json",classifier.toJson());
+
+}
+
+PokeImage.prototype.categorize = function(classifier){
+	return classifier.categorize(this.tags.join(", "));
+}
+
+PokeImage.prototype.push = function(callback){
+
 	for (id in this.tags){
 		var current = this.tags[id];
-		var cur_ref = tags.child(current);
 
-		cur_ref.child(this.id).set(this.id);
 	}
 	callback(this);
 };
 
-Gif.prototype.ignore = function(tag,callback){
+PokeImage.prototype.ignore = function(tag,callback){
 
 	if (this.tags.indexOf(tag) == -1){
 		callback(false);
 		return;
 	}
 
-	var gif = fb_root.child("gifs").child(this.id);
-	var tags = fb_root.child("tags").child(tag);
 	var self = this;
 
 	request.post({
@@ -98,37 +136,20 @@ Gif.prototype.ignore = function(tag,callback){
 				'Authorization':'Bearer '+token
 			}
 		},function(err,res,body){
-			gif.once("value",function(snapshot){
-				var data = snapshot.val();
 
-				for (i=0;i<data.tags.length;i++){
 
-					if (data.tags[i] == tag){
-						data.tags.splice(i,1);
-						gif.child(tag).set(data.tags);
-						break;
-					}
-				}
-
-				tags.once("value",function(snap){
-					var list = snap.val();
-
-					list[self.id] = null;
-					callback(true);
-				});
-			});
 		});
 	});
 
 }
 
-Gif.prototype.tag = function(callback){
+PokeImage.prototype.tag = function(callback){
 
 	if (!this.url){
 		return "First have a url before tagging";
 	}
 
-	console.log("Analyzing "+this.id);
+	console.log("Analyzing "+this.url);
 	var cur_url = this.url;
 	var self = this;
 
@@ -159,16 +180,20 @@ Gif.prototype.tag = function(callback){
 			}
 
 			var data = JSON.parse(body);
+
 			if (data.results && data.results[0].result && data.results[0].result.tag && data.results[0].result.tag.classes){
-				self.tags = data.results[0].result.tag.classes[0];
-			}else{
-				//console.log(data);
-				//return data;
+				self.tags = data.results[0].result.tag.classes;
 			}
 
-			callback(new Gif(cur_url,self.id,self.tags));
+			callback(self);
+/*			MongoClient.connect(monogo_url,function(err,db){
+				updateImage(self.url,{tags:self.tags},db,function(){
+					callback(self)
+				});
+			});*/
+
 		});
 	});
 };
 
-module.exports = Gif;
+module.exports = PokeImage;
