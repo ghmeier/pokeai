@@ -79,7 +79,7 @@ GifList.getValidatedImageList = function(q,list,num,max,classifier,callback){
             });
         }
 
-        if (num + data.length < max){
+        if (num + data["items"].length < max){
             return GifList.getValidatedImageList(params.q,list,num+data["items"].length,max,classifier,function(images){
            		callback(images);
            	});

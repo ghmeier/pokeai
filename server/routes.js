@@ -111,6 +111,7 @@ module.exports = function(app,classifier,passport){
 	});
 
 	app.get("/search",function(req,res){
+		//ended with pidgeot
 		var query = req.query.q;
 		var limit = parseInt(req.query.limit) || 10;
 
