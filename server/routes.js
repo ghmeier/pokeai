@@ -110,6 +110,14 @@ module.exports = function(app,classifier,passport){
 		});
 	});
 
+	app.get("/find",function(req,res){
+		var query = req.query.q;
+
+		PokeImage.getImageByKeyword(query,function(image){
+			res.json(image);
+		});
+	})
+
 	app.get("/search",function(req,res){
 		//ended with pidgeot
 		var query = req.query.q;
@@ -118,7 +126,25 @@ module.exports = function(app,classifier,passport){
 		ImageList.getImageList(query,new Array(),limit,classifier,function(list){
 			res.json({data:list});
 		});
-	})
+	});
+
+	app.get("/color",function(req,res){
+/*		var url = req.query.url;
+
+		PokeImage.getImageByUrl(url,function(image){
+			if(!image){
+				res.json({success:false,message:"No Image for url "+url});
+				return;
+			}
+
+			image.color(function(img){
+				res.json(img);
+			});
+		});*/
+		ImageList.updateAllColor(function(){
+			res.json({success:true});
+		});
+	});
 
 	app.get("/images",function(req,res){
 		res.json({});

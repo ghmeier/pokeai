@@ -92,6 +92,33 @@ GifList.getValidatedImageList = function(q,list,num,max,classifier,callback){
     });
 }
 
+GifList.updateAllColor = function(callback){
+    MongoClient.connect(mongo_url,function(err,db){
+
+        db.collection("images").find({}).toArray(function(err,docs){
+            GifList.updateSingleColor(docs,function(){
+                callback();
+            });
+        });
+    });
+}
+
+GifList.updateSingleColor = function(list,callback){
+    if (!list || list.length == 0){
+        callback();
+        return;
+    }
+
+    var raw = list.shift();
+    var cur = new PokeImage(null,raw["url"],raw["keyword"],raw["tags"],raw["colors"]);
+    console.log("Coloring "+raw.url);
+     cur.color(function(){
+        GifList.updateSingleColor(list,function(){
+            callback();
+        });
+     });
+}
+
 GifList.listTags = function(start,limit,callback){
 	var tags = new Array();
 
