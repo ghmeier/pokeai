@@ -33,7 +33,7 @@ GifList.getImageList = function(q,list,max,classifier,callback){
         	});
         });
 	}).catch(function(error){
-		return {error:true,message:"No pokemon found called "+q,data:error};
+		callback({error:true,message:"No pokemon found called "+q,data:error});
 	});
 }
 
@@ -73,8 +73,10 @@ GifList.getValidatedImageList = function(q,list,num,max,classifier,callback){
             var pokeimage = new PokeImage(null,data["items"][i]["link"],params.q);
 
             pokeimage.tag(function(image){
-                PokeImage.insertImage(image,function(){
-                    image.classify(classifier);
+                image.color(function(image){
+                    PokeImage.insertImage(image,function(){
+                        image.classify(classifier);
+                    });
                 });
             });
         }

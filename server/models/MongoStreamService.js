@@ -6,6 +6,7 @@ var mongo_url = "mongodb://heroku_qs4vjvqc:gsnlshm4n071a1jplocgesdd3q@ds011810.m
 
 function MongoStreamService(){
     this.stream = new Array();
+    this.updating = false;
 }
 
 MongoStreamService.getStreamItem = function(type,update,new_data){
@@ -18,10 +19,37 @@ MongoStreamService.getStreamItem = function(type,update,new_data){
 
 MongoStreamService.prototype.commit = function(){
     //commit stuff in the stream
+    if (this.stream.length < 1 || this.updating){
+        return;
+    }
+
+    this.updating = true;
+    MongoClient.connect(mongo_url,function(err,db){
+        if (err){
+            console.log(err);
+            return ;
+        }
+
+        this.commitDB(db);
+    }).bind(this);
+}
+
+MongoStreamService.prototype.commitDB = function(db){
+    var popped = this.stream.shift();
+    var collection_name = popped.type;
+
+    db.collection(collection_name).update({"_id":popped.update._id},popped.update,{upsert:true},function(err,results){
+        if (this.stream.length > 0){
+            this.commitDB(db);
+        }else{
+            this.updating = false;
+        }
+    });
 }
 
 MongoStreamService.prototype.push = function(item){
     this.merge(item);
+    this.commit()
 }
 
 MongoStreamService.prototype.merge = function(item){

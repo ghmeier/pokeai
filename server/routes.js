@@ -119,7 +119,7 @@ module.exports = function(app,classifier,passport){
 	})
 
 	app.get("/search",function(req,res){
-		//ended with pidgeot
+		//ended with psyduck
 		var query = req.query.q;
 		var limit = parseInt(req.query.limit) || 10;
 
@@ -129,18 +129,7 @@ module.exports = function(app,classifier,passport){
 	});
 
 	app.get("/color",function(req,res){
-/*		var url = req.query.url;
 
-		PokeImage.getImageByUrl(url,function(image){
-			if(!image){
-				res.json({success:false,message:"No Image for url "+url});
-				return;
-			}
-
-			image.color(function(img){
-				res.json(img);
-			});
-		});*/
 		ImageList.updateAllColor(function(){
 			res.json({success:true});
 		});

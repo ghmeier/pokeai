@@ -217,7 +217,7 @@ PokeImage.prototype.color = function(callback){
 				}else{
 					console.log("some other error");
 				}
-				callback(false);
+				callback(self);
 				return;
 			}
 			var raw = data.results[0].colors;
@@ -229,7 +229,7 @@ PokeImage.prototype.color = function(callback){
 			MongoClient.connect(mongo_url,function(err,db){
 				if (err){
 					console.log(err);
-					callback(false);
+					callback(self);
 					return;
 				}
 
@@ -248,7 +248,7 @@ PokeImage.prototype.updateColors = function(db,callback){
 	db.collection("colors").findOne({name:this.keyword},function(err,doc){
 		if (err){
 			console.log(err);
-			callback(false);
+			callback(self);
 			return;
 		}
 
