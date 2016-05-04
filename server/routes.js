@@ -106,7 +106,7 @@ module.exports = function(app,classifier,passport){
 		image.tag(function(img){
 			var keyword = img.categorize(classifier);
 
-			res.json({pokemon:keyword});
+			res.json({url:url,pokemon:keyword});
 		});
 	});
 
@@ -130,7 +130,7 @@ module.exports = function(app,classifier,passport){
 
 	app.get("/color",function(req,res){
 
-		ImageList.updateAllColor(function(){
+		ImageList.updateAllColor(classifier,function(updated){
 			res.json({success:true});
 		});
 	});

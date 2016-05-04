@@ -12,13 +12,13 @@ function PokeImage() {
 	this.url = "";
 	this.keyword = "";
 	this.tags = new Array();
+	this.colors = new Array();
 	this.id = "";
 };
 
 function PokeImage(id,url,keyword,tags,colors,callback){
 	this.url = url || "";
 	this.keyword = keyword;
-	this.id= id || "";
 	this.tags=tags || new Array();
 	this.colors = colors || new Array();
 	if (callback && typeof(callback) == 'function'){
@@ -56,7 +56,7 @@ PokeImage.getImageByKeyword = function(keyword,callback){
         		return;
         	}
 
-        	findImage({keyword:keyword},db,function(image){
+        	findImage({keyword:keyword,tags:{"$not":{"$size":0}}},db,function(image){
         		if (!image){
         			callback(null);
         			return;
@@ -150,22 +150,7 @@ PokeImage.prototype.ignore = function(tag,callback){
 
 	var self = this;
 
-	request.post({
-		url:"https://api.clarifai.com/v1/token",
-		form:{
-			"grant_type":"client_credentials",
-			"client_id": "LtBAeH3T5UdE9uTYaiehZObqh1PZehqGOEwr064G",
-			"client_secret":"BddH4Yro_9WsszRNkfyVLPNCGdcKk7Ljiooxbzm5"
-		}
-	},function(err,res,body){
-
-		if (err){
-			callback(false);
-			return;
-		}
-
-		var token_data = JSON.parse(body);
-		token = token_data.access_token;
+	PokeImage.getClarifaiToken(function(token){
 
 		request.get({
 			url:"http://api.clarifai.com/v1/feedback?url="+self.url+"&remove_tags="+tag,
@@ -186,23 +171,18 @@ PokeImage.prototype.color = function(callback){
 	}
 
 	var cur_url = this.url;
+	var match      = cur_url.match(/[\.](png|jpg)/gi);
+	var lastIndex  = -1;
+	if (match){
+		lastIndex = cur_url.lastIndexOf(match[match.length-1]);
+	}
+
+	if (lastIndex >= 0){
+		cur_url = cur_url.substring(0,lastIndex+1);
+	}
 	var self = this;
 
-	request.post({
-		url:"https://api.clarifai.com/v1/token",
-		form:{
-			"grant_type":"client_credentials",
-			"client_id": "LtBAeH3T5UdE9uTYaiehZObqh1PZehqGOEwr064G",
-			"client_secret":"BddH4Yro_9WsszRNkfyVLPNCGdcKk7Ljiooxbzm5"
-		}
-	},function(err,res,body){
-
-		if (err){
-			return err;
-		}
-
-		var token_data = JSON.parse(body);
-		token = token_data.access_token;
+	PokeImage.getClarifaiToken(function(token){
 
 		request.get({
 			url:"http://api.clarifai.com/v1/color?url="+cur_url,
@@ -215,7 +195,7 @@ PokeImage.prototype.color = function(callback){
 				if (data.errors){
 					console.log(data.errors[0].error.message);
 				}else{
-					console.log("some other error");
+					console.log("some other error "+self.url);
 				}
 				callback(self);
 				return;
@@ -270,6 +250,43 @@ PokeImage.prototype.updateColors = function(db,callback){
 	});
 }
 
+PokeImage.prototype.updateTags = function(db,callback){
+	var self = this;
+
+	db.collection("images").findOne({url:this.url},function(err,doc){
+		if (err){
+			console.log(err);
+			callback(self);
+			return;
+		}
+
+		db.collection("images").update({url:self.url},self,{upsert:true});
+
+		callback(self);
+	});
+}
+
+PokeImage.getClarifaiToken = function(callback){
+	request.post({
+		url:"https://api.clarifai.com/v1/token",
+		form:{
+			"grant_type":"client_credentials",
+			"client_id": "KvWTcDDBcD4iDhzazoccxjduAZji92Y7S86Jb1uG",
+			"client_secret":"D21wcrABg2siHeIAhdQcsmb3YC13kZO_gCjCG9Cl"
+		}
+	},function(err,res,body){
+
+		if (err){
+			return err;
+		}
+
+		var token_data = JSON.parse(body);
+		token = token_data.access_token;
+
+		callback(token);
+	});
+}
+
 PokeImage.prototype.tag = function(callback){
 
 	if (!this.url){
@@ -280,21 +297,7 @@ PokeImage.prototype.tag = function(callback){
 	var cur_url = this.url;
 	var self = this;
 
-	request.post({
-		url:"https://api.clarifai.com/v1/token",
-		form:{
-			"grant_type":"client_credentials",
-			"client_id": "LtBAeH3T5UdE9uTYaiehZObqh1PZehqGOEwr064G",
-			"client_secret":"BddH4Yro_9WsszRNkfyVLPNCGdcKk7Ljiooxbzm5"
-		}
-	},function(err,res,body){
-
-		if (err){
-			return err;
-		}
-
-		var token_data = JSON.parse(body);
-		token = token_data.access_token;
+	PokeImage.getClarifaiToken(function(token){
 
 		request.get({
 			url:"http://api.clarifai.com/v1/tag?url="+cur_url,
@@ -313,11 +316,6 @@ PokeImage.prototype.tag = function(callback){
 			}
 
 			callback(self);
-/*			MongoClient.connect(monogo_url,function(err,db){
-				updateImage(self.url,{tags:self.tags},db,function(){
-					callback(self)
-				});
-			});*/
 
 		});
 	});

@@ -8,18 +8,13 @@ var P = new Pokedex();
 var mongo_url = "mongodb://heroku_qs4vjvqc:gsnlshm4n071a1jplocgesdd3q@ds011810.mlab.com:11810/heroku_qs4vjvqc";
 
 function GifList(){
-
 	this.gifs = new Array();
-
-
 };
 
 function GifList(tag,start,limit,do_done){
 	this.gifs = new Array();
 	var self = this;
 	var callback = do_done;
-
-
 };
 
 GifList.getImageList = function(q,list,max,classifier,callback){
@@ -94,32 +89,112 @@ GifList.getValidatedImageList = function(q,list,num,max,classifier,callback){
     });
 }
 
-GifList.updateAllColor = function(callback){
+GifList.updateAllColor = function(classifier,callback){
     MongoClient.connect(mongo_url,function(err,db){
 
-        db.collection("images").find({}).toArray(function(err,docs){
-            GifList.updateSingleColor(docs,function(){
-                callback();
+        db.collection("images").find({"$or":[{tags:{"$size":0}},{colors:{"$size":0}}]}).toArray(function(err,docs){
+            GifList.updateTags(docs,classifier,function(updated){
+                console.log("finised updating "+updated.length);
+                callback(updated);
             });
         });
     });
 }
 
-GifList.updateSingleColor = function(list,callback){
+GifList.updateTags = function(list,classifier,callback){
     if (!list || list.length == 0){
         callback();
         return;
     }
 
-    var raw = list.shift();
-    var cur = new PokeImage(null,raw["url"],raw["keyword"],raw["tags"],raw["colors"]);
-    console.log("Coloring "+raw.url);
-     cur.color(function(){
-        GifList.updateSingleColor(list,function(){
-            callback();
-        });
+    var splicesize = 10;
+    if (list.length < splicesize){
+        splicesize = list.length;
+    }
+
+    var front_list = list.splice(0,splicesize);
+
+    console.log("Tagging "+front_list.length+" images.");
+    var urls = [];
+    for (i=0;i<front_list.length;i++){
+        var cur_url = front_list[i]["url"];
+        if (cur_url){
+            urls.push(cur_url);
+        }
+    }
+
+    GifList.multiTag(urls,front_list,classifier,function(updated){
+
+        if (list.length > 0){
+            console.log(list.length +" more.");
+            GifList.updateTags(list,classifier,function(u){
+                callback(u);
+            });
+        }else{
+            console.log("done");
+            callback(updated);
+        }
      });
 }
+
+GifList.multiTag = function(urls,list,classifier,callback){
+
+    var self = this;
+
+    PokeImage.getClarifaiToken(function(token){
+
+        request.post({
+            url:"https://api.clarifai.com/v1/tag",
+            form:"url="+urls.join("&url="),
+            headers: {
+                'Authorization':'Bearer '+token
+            }
+        },function(err,res,body){
+            var data = JSON.parse(body);
+            if (!data.results){
+                if (data.errors){
+                    console.log(data.errors[0].error.message);
+                }else{
+                    console.log("some other error ",data);
+                }
+                callback(self);
+                return;
+            }
+            var raw = data.results;
+            for (i=0;i<raw.length;i++){
+                if (raw[i].result.tag){
+                    console.log("SUCCESS: tagged!");
+                    var cur = list[i];
+                    cur["tags"] = raw[i].result.tag.classes;
+                    var image = new PokeImage("",cur["url"],cur["keyword"],cur["tags"],cur["colors"]);
+                    image.classify(classifier,function(tagged){
+                            tagged.updateTags(function(){
+                                console.log("updated mongo :)");
+                            });
+                        });
+                    });
+                }else{
+                    console.log("ERROR: " + raw[i].result.error);
+                }
+            }
+
+            callback(list);
+/*            MongoClient.connect(mongo_url,function(err,db){
+                if (err){
+                    console.log(err);
+                    callback(self);
+                    return;
+                }
+
+                self.updateColors(db,function(image){
+                    callback(image);
+                });
+            });*/
+        });
+
+    });
+}
+
 
 GifList.listTags = function(start,limit,callback){
 	var tags = new Array();
