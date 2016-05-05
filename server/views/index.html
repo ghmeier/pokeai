@@ -26,16 +26,7 @@
     </div>
     <div class="container">
         <div class="row">
-            <div class="col m6 s12 offset-m3">
-                <div class="card" id="image" style="display:none">
-                    <div class="card-image">
-                    <img id="pokemon-image" src=""/>
-                    <span class="card-title" id="pokemon-name" style="color:black"></span>
-                    </div>
-                </div>
-            </div>
-        <div class="row">
-            <div class="col s12 m6 offset-m3">
+            <div class="col s12 m6">
                 <div class="card" style="padding-top:20px" id="search">
                     <div class="input-field card-content">
                         <i class="material-icons prefix">search</i>
@@ -48,6 +39,14 @@
           <input id="classify" type="text" class="validate">
           <label for="classify">Image Url</label>
           <a class="waves-effect waves-light btn" onclick="classify()">Who's that Pokemon?</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col m6 s12">
+                <div class="card" id="image" style="display:none">
+                    <div class="card-image">
+                    <img id="pokemon-image" src=""/>
+                    <span class="card-title" id="pokemon-name" style="color:black"></span>
                     </div>
                 </div>
             </div>
@@ -65,7 +64,7 @@
         function tallgrass(){
             var val = $("#tallgrass").val().trim();
             if (val){
-                $.get("http://localhost:3000/find?q="+val,function(body){
+                $.get("/find?q="+val,function(body){
                     $("#pokemon-image").attr("src",body.url);
                     $("#pokemon-name").text(body.keyword);
                     $("#image").show();
@@ -78,7 +77,7 @@
             var val = $("#classify").val().trim();
 
             if (val){
-                $.get("http://localhost:3000/categorize?url="+val,function(body){
+                $.get("/categorize?url="+val,function(body){
                     $("#pokemon-image").attr("src",body.url);
                     $("#pokemon-name").text(body.pokemon);
                     $("#image").show();

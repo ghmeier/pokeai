@@ -102,17 +102,21 @@ var insertImage = function(url,keyword,tags,colors,db,callback){
 };
 
 var findImage = function(query,db,callback){
-	var cursor = db.collection("images").findOne(query,{},function(err,doc){
+	var cursor = db.collection("images").find(query,{}).toArray(function(err,docs){
 		if (err){
 			console.log(err);
 			callback(false);
 			return;
 		}
 
-		if (!doc){
+		if (!docs){
 			callback(null);
 			return;
 		}
+
+		var pos = Math.floor(Math.random()*docs.length);
+		console.log(pos);
+		var doc = docs[pos];
 
 		return new PokeImage(doc._id,doc.url,doc.keyword,doc.tags,doc.colors,function(image){
 			db.close();
@@ -137,32 +141,21 @@ PokeImage.prototype.classify = function(classifier,callback){
 
 }
 
-PokeImage.prototype.categorize = function(classifier){
-	return classifier.categorize(this.tags.join(", "));
-}
-
-PokeImage.prototype.ignore = function(tag,callback){
-
-	if (this.tags.indexOf(tag) == -1){
-		callback(false);
-		return;
-	}
-
+PokeImage.prototype.guessPokemon = function(classifier,callback){
 	var self = this;
 
-	PokeImage.getClarifaiToken(function(token){
-
-		request.get({
-			url:"http://api.clarifai.com/v1/feedback?url="+self.url+"&remove_tags="+tag,
-			headers: {
-				'Authorization':'Bearer '+token
-			}
-		},function(err,res,body){
-
-
+		self.tag(function(img){
+			//img.color(function(img){
+				var keyword = img.categorize(classifier);
+				console.log(keyword);
+				img.keyword = keyword;
+				callback(img);
+			//});
 		});
-	});
+}
 
+PokeImage.prototype.categorize = function(classifier){
+	return classifier.categorize(this.tags.join(", "));
 }
 
 PokeImage.prototype.color = function(callback){
@@ -250,19 +243,27 @@ PokeImage.prototype.updateColors = function(db,callback){
 	});
 }
 
-PokeImage.prototype.updateTags = function(db,callback){
+PokeImage.prototype.updateTags = function(callback){
 	var self = this;
 
-	db.collection("images").findOne({url:this.url},function(err,doc){
+	MongoClient.connect(mongo_url,function(err,db){
 		if (err){
 			console.log(err);
 			callback(self);
 			return;
 		}
 
-		db.collection("images").update({url:self.url},self,{upsert:true});
+		db.collection("images").findOne({url:this.url},function(err,doc){
+			if (err){
+				console.log(err);
+				callback(self);
+				return;
+			}
 
-		callback(self);
+			db.collection("images").update({url:self.url},self,{upsert:true});
+
+			callback(self);
+		});
 	});
 }
 
@@ -306,6 +307,7 @@ PokeImage.prototype.tag = function(callback){
 			}
 		},function(err,res,body){
 			if (err){
+				callback(self);
 				return err;
 			}
 

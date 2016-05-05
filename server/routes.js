@@ -103,10 +103,8 @@ module.exports = function(app,classifier,passport){
 
 		var image = new PokeImage(null,url,null,null,null);
 
-		image.tag(function(img){
-			var keyword = img.categorize(classifier);
-
-			res.json({url:url,pokemon:keyword});
+		image.guessPokemon(classifier,function(pokemon){
+			res.json({url:pokemon.url,pokemon:pokemon.keyword});
 		});
 	});
 
@@ -128,10 +126,16 @@ module.exports = function(app,classifier,passport){
 		});
 	});
 
-	app.get("/color",function(req,res){
+	app.get("/update_tag",function(req,res){
 
 		ImageList.updateAllColor(classifier,function(updated){
 			res.json({success:true});
+		});
+	});
+
+	app.get("/colors/top",function(req,res){
+		ImageList.getTopColors(function(colors){
+			res.json({data:colors});
 		});
 	});
 

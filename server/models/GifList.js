@@ -17,6 +17,47 @@ function GifList(tag,start,limit,do_done){
 	var callback = do_done;
 };
 
+GifList.getTopColors = function(callback){
+    MongoClient.connect(mongo_url,function(err,db){
+        if (err){
+            callback();
+            return;
+        }
+
+        db.collection("colors").find({}).toArray(function(err,docs){
+            var top_colors = {};
+            for (i=0;i<docs.length;i++){
+                var keys = Object.keys(docs[i]);
+
+                for (j=0;j<keys.length;j++){
+                    var cur = keys[j];
+                    if (cur == "name" || cur == "_id"){
+                        continue;
+                    }
+
+                    if (!top_colors[cur]){
+                        top_colors[cur] = {value:0,type:cur};
+                    }
+
+                    top_colors[cur].value += docs[i][cur];
+                }
+            }
+
+            var keys = Object.keys(top_colors);
+            var sorted = [];
+            for (i=0;i<keys.length;i++){
+                sorted.push([top_colors[keys[i]].type,top_colors[keys[i]].value]);
+            }
+
+            sorted.sort(function (a, b) {
+                return a[1] - b[1];
+            });
+
+            callback(sorted);
+        });
+    });
+}
+
 GifList.getImageList = function(q,list,max,classifier,callback){
     var self = this;
     P.getPokemonByName(q.toLowerCase()).then(function(response){
@@ -167,11 +208,9 @@ GifList.multiTag = function(urls,list,classifier,callback){
                     var cur = list[i];
                     cur["tags"] = raw[i].result.tag.classes;
                     var image = new PokeImage("",cur["url"],cur["keyword"],cur["tags"],cur["colors"]);
-                    image.classify(classifier,function(tagged){
-                            tagged.updateTags(function(){
-                                console.log("updated mongo :)");
-                            });
-                        });
+                    image.classify(classifier);
+                    image.updateTags(function(){
+                        console.log("updated mongo :)");
                     });
                 }else{
                     console.log("ERROR: " + raw[i].result.error);
@@ -179,17 +218,6 @@ GifList.multiTag = function(urls,list,classifier,callback){
             }
 
             callback(list);
-/*            MongoClient.connect(mongo_url,function(err,db){
-                if (err){
-                    console.log(err);
-                    callback(self);
-                    return;
-                }
-
-                self.updateColors(db,function(image){
-                    callback(image);
-                });
-            });*/
         });
 
     });
