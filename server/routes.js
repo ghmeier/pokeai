@@ -1,6 +1,6 @@
 var secrets = require("./config/secrets");
-var PokeImage = require("./models/Gif");
-var ImageList = require("./models/GifList");
+var PokeImage = require("./models/PokeImage");
+var ImageList = require("./models/ImageList");
 var request = require("request");
 
 module.exports = function(app,classifier,passport){

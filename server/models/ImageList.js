@@ -1,24 +1,23 @@
-var PokeImage = require("./Gif");
+var PokeImage = require("./PokeImage");
 var async = require("async");
+var secrets = require("../config/secrets.js");
 var Pokedex = require("pokedex-promise-v2");
 var request = require("request");
 var MongoClient = require("mongodb").MongoClient;
 var P = new Pokedex();
 
-var mongo_url = "mongodb://heroku_qs4vjvqc:gsnlshm4n071a1jplocgesdd3q@ds011810.mlab.com:11810/heroku_qs4vjvqc";
-
-function GifList(){
+function ImageList(){
 	this.gifs = new Array();
 };
 
-function GifList(tag,start,limit,do_done){
+function ImageList(tag,start,limit,do_done){
 	this.gifs = new Array();
 	var self = this;
 	var callback = do_done;
 };
 
-GifList.getTopColors = function(callback){
-    MongoClient.connect(mongo_url,function(err,db){
+ImageList.getTopColors = function(callback){
+    MongoClient.connect(secrets.mongo_url,function(err,db){
         if (err){
             callback();
             return;
@@ -58,13 +57,13 @@ GifList.getTopColors = function(callback){
     });
 }
 
-GifList.getImageList = function(q,list,max,classifier,callback){
+ImageList.getImageList = function(q,list,max,classifier,callback){
     var self = this;
     P.getPokemonByName(q.toLowerCase()).then(function(response){
     	console.log("Validated Pokemon Name");
         self.getPokeImageCount(q,function(count){
             var num = count || 1;
-        	return GifList.getValidatedImageList(q,list,num,num+max,classifier,function(images){
+        	return ImageList.getValidatedImageList(q,list,num,num+max,classifier,function(images){
         		callback(images);
         	});
         });
@@ -73,7 +72,7 @@ GifList.getImageList = function(q,list,max,classifier,callback){
 	});
 }
 
-GifList.getValidatedImageList = function(q,list,num,max,classifier,callback){
+ImageList.getValidatedImageList = function(q,list,num,max,classifier,callback){
 	var params = {};
     params.q = q.toLowerCase(); // search text
     params.start = num;
@@ -118,7 +117,7 @@ GifList.getValidatedImageList = function(q,list,num,max,classifier,callback){
         }
 
         if (num + data["items"].length < max){
-            return GifList.getValidatedImageList(params.q,list,num+data["items"].length,max,classifier,function(images){
+            return ImageList.getValidatedImageList(params.q,list,num+data["items"].length,max,classifier,function(images){
            		callback(images);
            	});
         }else{
@@ -130,11 +129,11 @@ GifList.getValidatedImageList = function(q,list,num,max,classifier,callback){
     });
 }
 
-GifList.updateAllColor = function(classifier,callback){
-    MongoClient.connect(mongo_url,function(err,db){
+ImageList.updateAllColor = function(classifier,callback){
+    MongoClient.connect(secrets.mongo_url,function(err,db){
 
         db.collection("images").find({"$or":[{tags:{"$size":0}},{colors:{"$size":0}}]}).toArray(function(err,docs){
-            GifList.updateTags(docs,classifier,function(updated){
+            ImageList.updateTags(docs,classifier,function(updated){
                 console.log("finised updating "+updated.length);
                 callback(updated);
             });
@@ -142,7 +141,7 @@ GifList.updateAllColor = function(classifier,callback){
     });
 }
 
-GifList.updateTags = function(list,classifier,callback){
+ImageList.updateTags = function(list,classifier,callback){
     if (!list || list.length == 0){
         callback();
         return;
@@ -164,11 +163,11 @@ GifList.updateTags = function(list,classifier,callback){
         }
     }
 
-    GifList.multiTag(urls,front_list,classifier,function(updated){
+    ImageList.multiTag(urls,front_list,classifier,function(updated){
 
         if (list.length > 0){
             console.log(list.length +" more.");
-            GifList.updateTags(list,classifier,function(u){
+            ImageList.updateTags(list,classifier,function(u){
                 callback(u);
             });
         }else{
@@ -178,7 +177,7 @@ GifList.updateTags = function(list,classifier,callback){
      });
 }
 
-GifList.multiTag = function(urls,list,classifier,callback){
+ImageList.multiTag = function(urls,list,classifier,callback){
 
     var self = this;
 
@@ -224,19 +223,19 @@ GifList.multiTag = function(urls,list,classifier,callback){
 }
 
 
-GifList.listTags = function(start,limit,callback){
+ImageList.listTags = function(start,limit,callback){
 	var tags = new Array();
 
 
 };
 
-GifList.searchByTag = function(query,start,limit,callback){
+ImageList.searchByTag = function(query,start,limit,callback){
 	var end_cb = callback;
 
 }
 
-GifList.getPokeImageCount = function(q,callback){
-    MongoClient.connect(mongo_url,function(err,db){
+ImageList.getPokeImageCount = function(q,callback){
+    MongoClient.connect(secrets.mongo_url,function(err,db){
         if (err){
             console.log(err)
             callback(0);
@@ -256,8 +255,8 @@ GifList.getPokeImageCount = function(q,callback){
     });
 }
 
-GifList.setPokeImageCount = function(name,val,callback){
-    MongoClient.connect(mongo_url,function(err,db){
+ImageList.setPokeImageCount = function(name,val,callback){
+    MongoClient.connect(secrets.mongo_url,function(err,db){
         var col = db.collection("counts");
 
         col.update({"name":name},{"name":name,"count":val},{upsert:true});
@@ -269,8 +268,8 @@ GifList.setPokeImageCount = function(name,val,callback){
 
 }
 
-GifList.insertPokeImageCount = function(name,val,callback){
-    MongoClient.connect(mongo_url,function(err,db){
+ImageList.insertPokeImageCount = function(name,val,callback){
+    MongoClient.connect(secrets.mongo_url,function(err,db){
         db.collection("counts").insertOne({
             "name":name,
             "count":val
@@ -288,7 +287,7 @@ GifList.insertPokeImageCount = function(name,val,callback){
     });
 }
 
-GifList.LevDist = function(s,len_s, t, len_t){
+ImageList.LevDist = function(s,len_s, t, len_t){
 	var cost = 0;
 
   /* base case: empty strings */
@@ -302,12 +301,12 @@ GifList.LevDist = function(s,len_s, t, len_t){
       cost = 1;
   }
   /* return minimum of delete char from s, delete char from t, and delete char from both */
-  return GifList.minimum(GifList.LevDist(s, len_s - 1, t, len_t    ) + 1,
-                 GifList.LevDist(s, len_s    , t, len_t - 1) + 1,
-                 GifList.LevDist(s, len_s - 1, t, len_t - 1) + cost);
+  return ImageList.minimum(ImageList.LevDist(s, len_s - 1, t, len_t    ) + 1,
+                 ImageList.LevDist(s, len_s    , t, len_t - 1) + 1,
+                 ImageList.LevDist(s, len_s - 1, t, len_t - 1) + cost);
 }
 
-GifList.minimum = function(one,two,three){
+ImageList.minimum = function(one,two,three){
 	if (one<=two && one <= three){
 		return one;
 	}
@@ -323,4 +322,4 @@ GifList.minimum = function(one,two,three){
 	return one;
 }
 
-module.exports = GifList;
+module.exports = ImageList;

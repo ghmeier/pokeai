@@ -1,12 +1,11 @@
 var MongoClient = require("mongodb").MongoClient;
+var secrets = require("../config/secrets.js");
 var ObjectId = require("mongodb").ObjectID;
 var request = require("request");
 var bayes = require("bayes");
 var fs = require("fs");
 var Pokedex = require("pokedex-promise-v2");
 var P = new Pokedex();
-
-var mongo_url = "mongodb://heroku_qs4vjvqc:gsnlshm4n071a1jplocgesdd3q@ds011810.mlab.com:11810/heroku_qs4vjvqc";
 
 function PokeImage() {
 	this.url = "";
@@ -27,7 +26,7 @@ function PokeImage(id,url,keyword,tags,colors,callback){
 }
 
 PokeImage.getImageByUrl = function(url,callback){
-	MongoClient.connect(mongo_url,function(err,db){
+	MongoClient.connect(secrets.mongo_url,function(err,db){
 		if (err){
 			console.log(err);
 			callback(false);
@@ -49,7 +48,7 @@ PokeImage.getImageByUrl = function(url,callback){
 PokeImage.getImageByKeyword = function(keyword,callback){
     P.getPokemonByName(keyword.toLowerCase()).then(function(response){
     	console.log("Validated Pokemon Name");
-        MongoClient.connect(mongo_url,function(err,db){
+        MongoClient.connect(secrets.mongo_url,function(err,db){
         	if (err){
         		console.log(err);
         		callback(false);
@@ -66,12 +65,12 @@ PokeImage.getImageByKeyword = function(keyword,callback){
         	});
         });
 	}).catch(function(error){
-		return {error:true,message:"No pokemon found called "+q,data:error};
+		return {error:true,message:"No pokemon found called "+keyword,data:error};
 	});
 }
 
 PokeImage.insertImage = function(image,callback){
-	MongoClient.connect(mongo_url,function(err,db){
+	MongoClient.connect(secrets.mongo_url,function(err,db){
 		if (err){
 			console.log(err);
 			callback(false);
@@ -199,7 +198,7 @@ PokeImage.prototype.color = function(callback){
 				self.colors.push({hex:raw[i].hex,density:raw[i].density});
 			}
 
-			MongoClient.connect(mongo_url,function(err,db){
+			MongoClient.connect(secrets.mongo_url,function(err,db){
 				if (err){
 					console.log(err);
 					callback(self);
@@ -246,7 +245,7 @@ PokeImage.prototype.updateColors = function(db,callback){
 PokeImage.prototype.updateTags = function(callback){
 	var self = this;
 
-	MongoClient.connect(mongo_url,function(err,db){
+	MongoClient.connect(secrets.mongo_url,function(err,db){
 		if (err){
 			console.log(err);
 			callback(self);
