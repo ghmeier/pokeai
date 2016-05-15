@@ -6,10 +6,6 @@ var request = require("request");
 var MongoClient = require("mongodb").MongoClient;
 var P = new Pokedex();
 
-function ImageList(){
-	this.gifs = new Array();
-};
-
 function ImageList(tag,start,limit,do_done){
 	this.gifs = new Array();
 	var self = this;
@@ -42,10 +38,10 @@ ImageList.getTopColors = function(callback){
                 }
             }
 
-            var keys = Object.keys(top_colors);
+            var k = Object.keys(top_colors);
             var sorted = [];
-            for (i=0;i<keys.length;i++){
-                sorted.push([top_colors[keys[i]].type,top_colors[keys[i]].value]);
+            for (i=0;i<k.length;i++){
+                sorted.push([top_colors[k[i]].type,top_colors[k[i]].value]);
             }
 
             sorted.sort(function (a, b) {
@@ -142,7 +138,7 @@ ImageList.updateAllColor = function(classifier,callback){
 }
 
 ImageList.updateTags = function(list,classifier,callback){
-    if (!list || list.length == 0){
+    if (!list || list.length === 0){
         callback();
         return;
     }

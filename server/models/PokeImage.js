@@ -7,6 +7,38 @@ var fs = require("fs");
 var Pokedex = require("pokedex-promise-v2");
 var P = new Pokedex();
 
+var findImage = function(query,db,callback){
+	var cursor = db.collection("images").find(query,{}).toArray(function(err,docs){
+		if (err){
+			console.log(err);
+			callback(false);
+			return;
+		}
+
+		if (!docs){
+			callback(null);
+			return;
+		}
+
+		var pos = Math.floor(Math.random()*docs.length);
+		console.log(pos);
+		var doc = docs[pos];
+
+		return new PokeImage(doc._id,doc.url,doc.keyword,doc.tags,doc.colors,function(image){
+			db.close();
+			callback(image);
+		});
+	});
+
+}
+
+var updateImage = function(url,data,db,callback){
+	var col = db.collection("images");
+
+	col.updateOne({url:url},{$set:data});
+	db.close();
+}
+
 function PokeImage() {
 	this.url = "";
 	this.keyword = "";
@@ -99,38 +131,6 @@ var insertImage = function(url,keyword,tags,colors,db,callback){
 		db.close();
 	});
 };
-
-var findImage = function(query,db,callback){
-	var cursor = db.collection("images").find(query,{}).toArray(function(err,docs){
-		if (err){
-			console.log(err);
-			callback(false);
-			return;
-		}
-
-		if (!docs){
-			callback(null);
-			return;
-		}
-
-		var pos = Math.floor(Math.random()*docs.length);
-		console.log(pos);
-		var doc = docs[pos];
-
-		return new PokeImage(doc._id,doc.url,doc.keyword,doc.tags,doc.colors,function(image){
-			db.close();
-			callback(image);
-		});
-	});
-
-}
-
-var updateImage = function(url,data,db,callback){
-	var col = db.collection("images");
-
-	col.updateOne({url:url},{$set:data});
-	db.close();
-}
 
 PokeImage.prototype.classify = function(classifier,callback){
 	var self = this;
