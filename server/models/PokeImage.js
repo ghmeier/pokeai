@@ -123,7 +123,7 @@ var insertImage = function(url,keyword,tags,colors,db,callback){
 		"colors":colors
 	}, function (err,result){
 		if (err){
-			console.log(err);
+		  console.log(err);
 			callback(false);
 		}
 
