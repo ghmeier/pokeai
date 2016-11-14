@@ -120,10 +120,6 @@ MongoStreamService.prototype.getMergePosition = function(type){
     return merge_position;
 }
 
-MongoStreamService.prototype.dump = function(){
-    console.log(this.stream);
-}
-
 MongoStreamService.prototype.size = function(){
     return this.stream.length;
 }

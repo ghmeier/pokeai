@@ -241,7 +241,6 @@ ImageList.insertPokeImageCount = function(name,val,callback){
             "count":val
         },function(err,result){
             if (err){
-                console.log(err);
                 callback();
                 db.close();
                 return;

@@ -49,9 +49,5 @@ if (data){
 var routes = require("./routes.js");
 routes(app,classifier,passport);
 
-process.on('exit', function() {
-    console.log("Exiting");
-
-});
 
 module.exports = app;

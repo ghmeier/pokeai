@@ -10,7 +10,6 @@ var P = new Pokedex();
 var findImage = function(query,db,callback){
 	db.collection("images").find(query,{}).toArray(function(err,docs){
 		if (err){
-			console.log(err);
 			callback(false);
 			return;
 		}
@@ -21,7 +20,6 @@ var findImage = function(query,db,callback){
 		}
 
 		var pos = Math.floor(Math.random()*docs.length);
-		console.log(pos);
 		var doc = docs[pos];
 
 		return new PokeImage(doc._id,doc.url,doc.keyword,doc.tags,doc.colors,function(image){
@@ -60,7 +58,6 @@ function PokeImage(id,url,keyword,tags,colors,callback){
 PokeImage.getImageByUrl = function(url,callback){
 	MongoClient.connect(secrets.mongo_url,function(err,db){
 		if (err){
-			console.log(err);
 			callback(false);
 			return;
 		}
@@ -78,24 +75,22 @@ PokeImage.getImageByUrl = function(url,callback){
 }
 
 PokeImage.getImageByKeyword = function(keyword,callback){
-    P.getPokemonByName(keyword.toLowerCase()).then(function(){
-    	console.log("Validated Pokemon Name");
-        MongoClient.connect(secrets.mongo_url,function(err,db){
-        	if (err){
-        		console.log(err);
-        		callback(false);
-        		return;
-        	}
+	P.getPokemonByName(keyword.toLowerCase()).then(function(){
+		MongoClient.connect(secrets.mongo_url,function(err,db){
+			if (err){
+				callback(false);
+				return;
+			}
 
-        	findImage({keyword:keyword,tags:{"$not":{"$size":0}}},db,function(image){
-        		if (!image){
-        			callback(null);
-        			return;
-        		}
+			findImage({keyword:keyword,tags:{"$not":{"$size":0}}},db,function(image){
+				if (!image){
+					callback(null);
+					return;
+				}
 
-        		callback(image);
-        	});
-        });
+				callback(image);
+			});
+		});
 	}).catch(function(error){
 		return {error:true,message:"No pokemon found called "+keyword,data:error};
 	});
@@ -109,7 +104,6 @@ var insertImage = function(url,keyword,tags,colors,db,callback){
 		"colors":colors
 	}, function (err){
 		if (err){
-		  console.log(err);
 			callback(false);
 		}
 
@@ -121,7 +115,6 @@ var insertImage = function(url,keyword,tags,colors,db,callback){
 PokeImage.insertImage = function(image,callback){
 	MongoClient.connect(secrets.mongo_url,function(err,db){
 		if (err){
-			console.log(err);
 			callback(false);
 		}
 
@@ -181,11 +174,6 @@ PokeImage.prototype.color = function(callback){
 		},function(err,res,body){
 			var data = JSON.parse(body);
 			if (!data.results){
-				if (data.errors){
-					console.log(data.errors[0].error.message);
-				}else{
-					console.log("some other error "+self.url);
-				}
 				callback(self);
 				return;
 			}
@@ -197,7 +185,6 @@ PokeImage.prototype.color = function(callback){
 
 			MongoClient.connect(secrets.mongo_url,function(err,db){
 				if (err){
-					console.log(err);
 					callback(self);
 					return;
 				}
@@ -216,7 +203,6 @@ PokeImage.prototype.updateColors = function(db,callback){
 
 	db.collection("colors").findOne({name:this.keyword},function(err,doc){
 		if (err){
-			console.log(err);
 			callback(self);
 			return;
 		}
@@ -283,7 +269,6 @@ PokeImage.prototype.tag = function(callback){
 		return "First have a url before tagging";
 	}
 
-	console.log("Analyzing "+this.url);
 	var cur_url = this.url;
 	var self = this;
 
