@@ -41,9 +41,9 @@ var data = fs.readFileSync("classifier.json","utf8");
 var classifier = {};
 
 if (data){
-    classifier = bayes.fromJson(data);
+	classifier = bayes.fromJson(data);
 }else{
-    classifier = bayes();
+	classifier = bayes();
 }
 
 var routes = require("./routes.js");

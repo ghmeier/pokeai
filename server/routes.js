@@ -28,7 +28,7 @@ module.exports = function(app,classifier){
 		var query = req.query.q;
 		var limit = parseInt(req.query.limit) || 10;
 
-		ImageList.getImageList(query,new Array(),limit,classifier,function(list){
+		ImageList.getImageList(query,[],limit,classifier,function(list){
 			res.json({data:list});
 		});
 	});

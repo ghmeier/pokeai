@@ -37,19 +37,11 @@ var updateImage = function(url,data,db){
 	db.close();
 }
 
-function PokeImage() {
-	this.url = "";
-	this.keyword = "";
-	this.tags = new Array();
-	this.colors = new Array();
-	this.id = "";
-};
-
 function PokeImage(id,url,keyword,tags,colors,callback){
 	this.url = url || "";
 	this.keyword = keyword;
-	this.tags=tags || new Array();
-	this.colors = colors || new Array();
+	this.tags=tags || [];
+	this.colors = colors || []
 	if (callback && typeof(callback) == 'function'){
 		callback(this);
 	}

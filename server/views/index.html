@@ -2,118 +2,120 @@
 
 <html>
 <head>
-    <!-- Compiled and minified CSS -->
-    <title>pokeai</title>
-    <link rel="shortcut icon" type="image/png" href="assets/pokeai.png"/>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.6/css/materialize.min.css">
-    <link href="http://oss.maxcdn.com/clusterize.js/0.15.0/clusterize.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	<!-- Compiled and minified CSS -->
+	<title>pokeai</title>
+	<link rel="shortcut icon" type="image/png" href="assets/pokeai.png"/>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.6/css/materialize.min.css">
+	<link href="http://oss.maxcdn.com/clusterize.js/0.15.0/clusterize.css" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
 </head>
 <body style="background-image:url('http://files.enjin.com/564201/images/bg/bg3.png')">
-    <div class="navbar-fixed">
-        <nav>
-          <div class="nav-wrapper white darken-1">
-            <a href="#!" class="brand-logo center" style="color:black">Pokeai</a>
-            <ul id="nav-mobile" class="right hide-on-med-and-dowm" style="height:inherit">
-                <li style="height:inherit">
-                    <a href="https://clarifai.com" target="_blank" style="color:black;height:inherit">
-                        <img class="right" style="height:40%;margin-top:12%" src="https://upload.wikimedia.org/wikipedia/commons/8/83/Clarifai_Logo.png"></img>API By&nbsp;
-                    </a>
-                </li>
-            </ul>
-          </div>
-        </nav>
-    </div>
-    <div class="container">
-        <div class="row">
-            <div class="col s12 m6">
-                <div class="card" style="padding-top:20px" id="search">
-                    <div class="card-content">
-                        <span class="card-title activator">Get Started<i class="material-icons right" style="cursor:pointer">info_outline</i></span>
-                    </div>
-                    <div class="input-field card-content">
-                        <i class="material-icons prefix">search</i>
-          <input id="tallgrass" type="text" class="validate">
-          <label for="tallgrass">Pokemon Name</label>
-          <a class="waves-effect waves-light btn" onclick="tallgrass()">Enter the tall grass!</a>
-                    </div>
-                    <div class="input-field card-content">
-                        <i class="material-icons prefix">launch</i>
-          <input id="classify" type="text" class="validate">
-          <label for="classify">Image Url</label>
-          <a class="waves-effect waves-light btn" onclick="classify()">Who's that Pokemon?</a>
-                    </div>
-                    <div class="card-reveal">
-                        <span class="card-title grey-text text-darken-4">More Info<i class="material-icons right">close</i></span>
-                        <p>Select a Pokemon name and enter the tall grass to view a categorized pokemon image, or ask who's that pokemon with an image url and we'll say which pokemon that image looks most like.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col m6 s12">
-                <div class="card" id="image" style="display:none">
-                    <div class="card-image">
-                    <img id="pokemon-image" src=""/>
-                    <div class="card-action" id="pokemon-name" style="color:black"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="col m6 s12 center" >
-                <div class="card" id="loader" style="display:none;padding:30px">
-                    <div class="preloader-wrapper big active">
-                        <div class="spinner-layer spinner-blue-only">
-                          <div class="circle-clipper left">
-                            <div class="circle"></div>
-                          </div><div class="gap-patch">
-                            <div class="circle"></div>
-                          </div><div class="circle-clipper right">
-                            <div class="circle"></div>
-                          </div>
-                        </div>
-                      </div>
-                </div>
-            </div>
-        </div>
-    </div>
+	<div class="navbar-fixed">
+		<nav>
+		  	<div class="nav-wrapper white darken-1">
+				<a href="#!" class="brand-logo center" style="color:black">Pokeai</a>
+				<ul id="nav-mobile" class="right hide-on-med-and-dowm" style="height:inherit">
+					<li style="height:inherit">
+						<a href="https://clarifai.com" target="_blank" style="color:black;height:inherit">
+							<img class="right" alt="clarifai" style="height:40%;margin-top:12%" src="https://upload.wikimedia.org/wikipedia/commons/8/83/Clarifai_Logo.png"></img>API By&nbsp;
+						</a>
+					</li>
+				</ul>
+		  	</div>
+		</nav>
+	</div>
+	<div class="container">
+		<div class="row">
+			<div class="col s12 m6">
+				<div class="card" style="padding-top:20px" id="search">
+					<div class="card-content">
+						<span class="card-title activator">Get Started<em class="material-icons right" style="cursor:pointer">info_outline</em></span>
+					</div>
+					<div class="input-field card-content">
+						<em class="material-icons prefix">search</em>
+		  				<input id="tallgrass" type="text" class="validate">
+		  				<label for="tallgrass">Pokemon Name</label>
+		  				<a class="waves-effect waves-light btn" onclick="tallgrass()">Enter the tall grass!</a>
+					</div>
+					<div class="input-field card-content">
+						<em class="material-icons prefix">launch</em>
+		  				<input id="classify" type="text" class="validate">
+		  				<label for="classify">Image Url</label>
+		  				<a class="waves-effect waves-light btn" onclick="classify()">Who's that Pokemon?</a>
+					</div>
+					<div class="card-reveal">
+						<span class="card-title grey-text text-darken-4">More Info<em class="material-icons right">close</em></span>
+						<p>Select a Pokemon name and enter the tall grass to view a categorized pokemon image, or ask who's that pokemon with an image url and we'll say which pokemon that image looks most like.</p>
+					</div>
+				</div>
+			</div>
+			<div class="col m6 s12">
+				<div class="card" id="image" style="display:none">
+					<div class="card-image">
+						<img id="pokemon-image" alt="pokemon" src=""/>
+						<div class="card-action" id="pokemon-name" style="color:black"></div>
+					</div>
+				</div>
+			</div>
+			<div class="col m6 s12 center" >
+				<div class="card" id="loader" style="display:none;padding:30px">
+					<div class="preloader-wrapper big active">
+						<div class="spinner-layer spinner-blue-only">
+						 	<div class="circle-clipper left">
+								<div class="circle"></div>
+							</div>
+							<div class="gap-patch">
+								<div class="circle"></div>
+						  	</div>
+						  	<div class="circle-clipper right">
+								<div class="circle"></div>
+						  	</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
-    <script src="http://underscorejs.org/underscore-min.js"></script>
-    <!-- Compiled and minified JavaScript -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.6/js/materialize.min.js"></script>
+	<!-- jQuery -->
+	<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+	<script src="http://underscorejs.org/underscore-min.js"></script>
+	<!-- Compiled and minified JavaScript -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.6/js/materialize.min.js"></script>
 
-    <script>
-        function tallgrass(){
-            var val = $("#tallgrass").val().trim();
-            if (val){
-                $("#image").hide();
-                $("#loader").show();
-                $.get("/find?q="+val,function(body){
-                    $("#loader").hide();
-                    $("#pokemon-image").attr("src",body.url);
-                    $("#pokemon-name").text(body.keyword);
-                    $("#image").show();
-                    console.log(body);
-                });
-            }
-        }
+	<script>
+		function tallgrass(){
+			var val = $("#tallgrass").val().trim();
+			if (val){
+				$("#image").hide();
+				$("#loader").show();
+				$.get("/find?q="+val,function(body){
+					$("#loader").hide();
+					$("#pokemon-image").attr("src",body.url);
+					$("#pokemon-name").text(body.keyword);
+					$("#image").show();
+					console.log(body);
+				});
+			}
+		}
 
-        function classify(){
-            var val = $("#classify").val().trim();
+		function classify(){
+			var val = $("#classify").val().trim();
 
-            if (val){
-                $("#image").hide();
-                $("#loader").show();
-                $.get("/categorize?url="+val,function(body){
-                    $("#loader").hide();
-                    $("#pokemon-image").attr("src",body.url);
-                    $("#pokemon-name").text(body.pokemon);
-                    $("#image").show();
-                    console.log(body);
-                });
-            }
-        }
-    </script>
+			if (val){
+				$("#image").hide();
+				$("#loader").show();
+				$.get("/categorize?url="+val,function(body){
+					$("#loader").hide();
+					$("#pokemon-image").attr("src",body.url);
+					$("#pokemon-name").text(body.pokemon);
+					$("#image").show();
+					console.log(body);
+				});
+			}
+		}
+	</script>
 
 </body>
 </html>
