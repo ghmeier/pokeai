@@ -6,7 +6,7 @@ var request = require("request");
 var MongoClient = require("mongodb").MongoClient;
 var P = new Pokedex();
 
-function ImageList(tag,start,limit){
+function ImageList(){
 	this.gifs = [];
 };
 
@@ -95,7 +95,7 @@ ImageList.getValidatedImageList = function(q,list,num,max,classifier,callback){
         	return list
         }
 
-        for (i=0;i<data["items"].length;i++){
+        for (var i=0;i<data["items"].length;i++){
         	list.push(data["items"][i]);
 
             var pokeimage = new PokeImage(null,data["items"][i]["link"],params.q);
