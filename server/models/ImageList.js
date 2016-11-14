@@ -6,10 +6,8 @@ var request = require("request");
 var MongoClient = require("mongodb").MongoClient;
 var P = new Pokedex();
 
-function ImageList(tag,start,limit,do_done){
-	this.gifs = new Array();
-	var self = this;
-	var callback = do_done;
+function ImageList(tag,start,limit){
+	this.gifs = [];
 };
 
 ImageList.getTopColors = function(callback){
@@ -21,10 +19,11 @@ ImageList.getTopColors = function(callback){
 
         db.collection("colors").find({}).toArray(function(err,docs){
             var top_colors = {};
+            var i;
             for (i=0;i<docs.length;i++){
                 var keys = Object.keys(docs[i]);
 
-                for (j=0;j<keys.length;j++){
+                for (var j=0;j<keys.length;j++){
                     var cur = keys[j];
                     if (cur == "name" || cur == "_id"){
                         continue;
@@ -55,8 +54,7 @@ ImageList.getTopColors = function(callback){
 
 ImageList.getImageList = function(q,list,max,classifier,callback){
     var self = this;
-    P.getPokemonByName(q.toLowerCase()).then(function(response){
-    	console.log("Validated Pokemon Name");
+    P.getPokemonByName(q.toLowerCase()).then(function(){
         self.getPokeImageCount(q,function(count){
             var num = count || 1;
         	return ImageList.getValidatedImageList(q,list,num,num+max,classifier,function(images){
@@ -94,7 +92,6 @@ ImageList.getValidatedImageList = function(q,list,num,max,classifier,callback){
         var data = JSON.parse(body);
 
         if (data.error){
-        	console.log("Error with google.");
         	return list
         }
 
@@ -130,7 +127,6 @@ ImageList.updateAllColor = function(classifier,callback){
 
         db.collection("images").find({"$or":[{tags:{"$size":0}},{colors:{"$size":0}}]}).toArray(function(err,docs){
             ImageList.updateTags(docs,classifier,function(updated){
-                console.log("finised updating "+updated.length);
                 callback(updated);
             });
         });
@@ -150,7 +146,6 @@ ImageList.updateTags = function(list,classifier,callback){
 
     var front_list = list.splice(0,splicesize);
 
-    console.log("Tagging "+front_list.length+" images.");
     var urls = [];
     for (i=0;i<front_list.length;i++){
         var cur_url = front_list[i]["url"];
@@ -162,12 +157,10 @@ ImageList.updateTags = function(list,classifier,callback){
     ImageList.multiTag(urls,front_list,classifier,function(updated){
 
         if (list.length > 0){
-            console.log(list.length +" more.");
             ImageList.updateTags(list,classifier,function(u){
                 callback(u);
             });
         }else{
-            console.log("done");
             callback(updated);
         }
      });
@@ -188,27 +181,19 @@ ImageList.multiTag = function(urls,list,classifier,callback){
         },function(err,res,body){
             var data = JSON.parse(body);
             if (!data.results){
-                if (data.errors){
-                    console.log(data.errors[0].error.message);
-                }else{
-                    console.log("some other error ",data);
-                }
                 callback(self);
                 return;
             }
             var raw = data.results;
             for (i=0;i<raw.length;i++){
                 if (raw[i].result.tag){
-                    console.log("SUCCESS: tagged!");
                     var cur = list[i];
                     cur["tags"] = raw[i].result.tag.classes;
                     var image = new PokeImage("",cur["url"],cur["keyword"],cur["tags"],cur["colors"]);
                     image.classify(classifier);
                     image.updateTags(function(){
-                        console.log("updated mongo :)");
+                        //console.log("updated mongo :)");
                     });
-                }else{
-                    console.log("ERROR: " + raw[i].result.error);
                 }
             }
 
@@ -218,22 +203,9 @@ ImageList.multiTag = function(urls,list,classifier,callback){
     });
 }
 
-
-ImageList.listTags = function(start,limit,callback){
-	var tags = new Array();
-
-
-};
-
-ImageList.searchByTag = function(query,start,limit,callback){
-	var end_cb = callback;
-
-}
-
 ImageList.getPokeImageCount = function(q,callback){
     MongoClient.connect(secrets.mongo_url,function(err,db){
         if (err){
-            console.log(err)
             callback(0);
         }
 
@@ -284,22 +256,26 @@ ImageList.insertPokeImageCount = function(name,val,callback){
 }
 
 ImageList.LevDist = function(s,len_s, t, len_t){
-	var cost = 0;
+    var cost;
 
-  /* base case: empty strings */
-  if (len_s == 0) return len_t;
-  if (len_t == 0) return len_s;
+    /* base case: empty strings */
+    if (len_s == 0) {
+        return len_t;
+    }
+    if (len_t == 0) {
+        return len_s;
+    }
 
-  /* test if last characters of the strings match */
-  if (s.charAt(len_s-1) == t.charAt(len_t-1)){
-     cost = 0;
-  }else{
-      cost = 1;
-  }
-  /* return minimum of delete char from s, delete char from t, and delete char from both */
-  return ImageList.minimum(ImageList.LevDist(s, len_s - 1, t, len_t    ) + 1,
-                 ImageList.LevDist(s, len_s    , t, len_t - 1) + 1,
-                 ImageList.LevDist(s, len_s - 1, t, len_t - 1) + cost);
+    /* test if last characters of the strings match */
+    if (s.charAt(len_s-1) == t.charAt(len_t-1)){
+        cost = 0;
+    }else{
+        cost = 1;
+    }
+    /* return minimum of delete char from s, delete char from t, and delete char from both */
+    return ImageList.minimum(ImageList.LevDist(s, len_s - 1, t, len_t) + 1,
+           ImageList.LevDist(s, len_s, t, len_t - 1) + 1,
+           ImageList.LevDist(s, len_s - 1, t, len_t - 1) + cost);
 }
 
 ImageList.minimum = function(one,two,three){
