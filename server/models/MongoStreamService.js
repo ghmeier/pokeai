@@ -5,7 +5,7 @@ var request = require("request");
 var mongo_url = "mongodb://heroku_qs4vjvqc:gsnlshm4n071a1jplocgesdd3q@ds011810.mlab.com:11810/heroku_qs4vjvqc";
 
 function MongoStreamService(){
-    this.stream = new Array();
+    this.stream = [];
     this.updating = false;
 }
 
@@ -24,10 +24,9 @@ MongoStreamService.prototype.commit = function(){
     }
 
     this.updating = true;
-    MongoClient.connect(mongo_url,function(err,db){
+    MongoClient.connect(mongo_url,function(db){
         if (err){
-            console.log(err);
-            return ;
+            return;
         }
 
         this.commitDB(db);
@@ -38,7 +37,7 @@ MongoStreamService.prototype.commitDB = function(db){
     var popped = this.stream.shift();
     var collection_name = popped.type;
 
-    db.collection(collection_name).update({"_id":popped.update._id},popped.update,{upsert:true},function(err,results){
+    db.collection(collection_name).update({"_id":popped.update._id},popped.update,{upsert:true},function(){
         if (this.stream.length > 0){
             this.commitDB(db);
         }else{
@@ -61,7 +60,7 @@ MongoStreamService.prototype.merge = function(item){
     }
 
     if (!this.stream[mp].new_data){
-        this.stream[mp].new_data = new Array();
+        this.stream[mp].new_data = [];
     }
 
     this.stream[mp].new_data.concat(item.new_data);
@@ -73,7 +72,7 @@ MongoStreamService.prototype.merge = function(item){
 
     var update_keys = Object.keys(item.update);
 
-    for (i=0;i<update_keys.length;i++){
+    for (var i=0;i<update_keys.length;i++){
         var key = update_keys[i];
         var update_item = item.update[key];
 
