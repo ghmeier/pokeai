@@ -132,7 +132,7 @@ PokeImage.insertImage = function(image,callback){
 	});
 }
 
-PokeImage.prototype.classify = function(classifier,callback){
+PokeImage.prototype.classify = function(classifier){
 	var self = this;
 
 	classifier.learn(self.tags.join(","),self.keyword);
@@ -225,7 +225,7 @@ PokeImage.prototype.updateColors = function(db,callback){
 			doc = {name:self.keyword};
 		}
 
-		for (i=0;i<self.colors.length;i++){
+		for (var i=0;i<self.colors.length;i++){
 			if (!doc[self.colors[i].hex]){
 				doc[self.colors[i].hex] = 0;
 			}

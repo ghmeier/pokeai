@@ -147,7 +147,7 @@ ImageList.updateTags = function(list,classifier,callback){
     var front_list = list.splice(0,splicesize);
 
     var urls = [];
-    for (i=0;i<front_list.length;i++){
+    for (var i=0;i<front_list.length;i++){
         var cur_url = front_list[i]["url"];
         if (cur_url){
             urls.push(cur_url);
@@ -185,7 +185,7 @@ ImageList.multiTag = function(urls,list,classifier,callback){
                 return;
             }
             var raw = data.results;
-            for (i=0;i<raw.length;i++){
+            for (var i=0;i<raw.length;i++){
                 if (raw[i].result.tag){
                     var cur = list[i];
                     cur["tags"] = raw[i].result.tag.classes;

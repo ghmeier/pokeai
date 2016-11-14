@@ -96,7 +96,7 @@ MongoStreamService.prototype.getUpdateItem = function (merge_position,key,update
 
     //add new values
     var new_keys = Object.keys(update_item);
-    for (i=0;i<new_keys.length;i++){
+    for (var i=0;i<new_keys.length;i++){
         if (new_item[new_keys[i]] && typeof new_item[new_keys[i]] === "number"){
             new_item[new_keys[i]] += update_item[new_keys[i]];
         }else{
