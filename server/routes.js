@@ -3,7 +3,7 @@ var PokeImage = require("./models/PokeImage");
 var ImageList = require("./models/ImageList");
 var request = require("request");
 
-module.exports = function(app,classifier,passport){
+module.exports = function(app,classifier){
 
 	app.get("/categorize",function(req,res){
 		var url = req.query.url;
@@ -35,7 +35,7 @@ module.exports = function(app,classifier,passport){
 
 	app.get("/update_tag",function(req,res){
 
-		ImageList.updateAllColor(classifier,function(updated){
+		ImageList.updateAllColor(classifier,function(){
 			res.json({success:true});
 		});
 	});

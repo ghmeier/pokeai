@@ -239,26 +239,20 @@ PokeImage.prototype.updateColors = function(db,callback){
 	});
 }
 
-PokeImage.prototype.updateTags = function(callback){
+PokeImage.prototype.updateTags = function(){
 	var self = this;
 
 	MongoClient.connect(secrets.mongo_url,function(err,db){
 		if (err){
-			console.log(err);
-			callback(self);
 			return;
 		}
 
 		db.collection("images").findOne({url:this.url},function(err){
 			if (err){
-				console.log(err);
-				callback(self);
 				return;
 			}
 
 			db.collection("images").update({url:self.url},self,{upsert:true});
-
-			callback(self);
 		});
 	});
 }

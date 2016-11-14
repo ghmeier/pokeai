@@ -191,9 +191,7 @@ ImageList.multiTag = function(urls,list,classifier,callback){
                     cur["tags"] = raw[i].result.tag.classes;
                     var image = new PokeImage("",cur["url"],cur["keyword"],cur["tags"],cur["colors"]);
                     image.classify(classifier);
-                    image.updateTags(function(){
-                        //console.log("updated mongo :)");
-                    });
+                    image.updateTags();
                 }
             }
 

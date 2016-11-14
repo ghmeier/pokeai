@@ -90,7 +90,7 @@ MongoStreamService.prototype.getUpdateItem = function (merge_position,key,update
     var cur_keys = Object.keys(this.stream[merge_position].update[key]);
 
     // copy existing item
-    for (i=0;i<cur_keys.length;i++){
+    for (var i=0;i<cur_keys.length;i++){
         new_item[cur_keys[i]] = this.stream[merge_position].update[key][cur_keys[i]];
     }
 
